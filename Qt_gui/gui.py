@@ -2,13 +2,14 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButt
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
 from functools import partial
+import configparser
 
-class ExampleGUI(QWidget):
-    def __init__(self):
+class Qt_gui(QWidget):
+    def __init__(self, callback=None):
         super().__init__()
-        self.num_buttons = 3
-        self.checkbox_row = 5
-        self.checkbox_column = 2
+        self.config = configparser.ConfigParser()
+        self.config.read('config.ini') 
+        self.callback = callback
         self.buttons = []
         self.checkbox_options = []
         self.VerButton = None
@@ -18,17 +19,22 @@ class ExampleGUI(QWidget):
         self.left_container = None
         self.right_container = None
         self.initUI()
-    
+
+    def verify(self):
+        if self.callback:
+
+            # 處理 label_title 和 self.checkbox_options 是否合法並分配字串給字典
+            # 如果合法調用 callback 函數
+            # 如果不合法彈出顯示框
+            
+            self.callback()  # 调用回调函数
+
     def initUI(self):
         # Main layout
         main_layout = QHBoxLayout()
         self.setLayout(main_layout)
-
-        title = 'Open3d GUI'
-        description = 'This is an example of using the Open3d GUI, a versatile tool designed to simplify the visualization, analysis, and processing of 3D data. With Open3d GUI, users can effortlessly interact with 3D models and point clouds, enjoying features such as real-time rendering, easy manipulation of objects through rotation, zooming, and panning.'
-
         # Left layout setup
-        left_container = self.create_container(self.create_left_layout(title, description, self.checkbox_column, self.checkbox_row), color="#FFA07A")
+        left_container = self.create_container(self.create_left_layout('Init', True), color="#FFA07A")
         right_container = self.create_container(self.create_right_layout(), color="#F08080")
 
         main_layout.addWidget(left_container, 5)
@@ -39,23 +45,23 @@ class ExampleGUI(QWidget):
         self.right_container = right_container
 
         # Set window properties
-        self.setWindowTitle('O3d GUI')
+        self.setWindowTitle(self.config['Init']['window_title'])
         self.setGeometry(300, 300, 1500, 800)
 
         self.adjust_font_size()
 
-    def create_left_layout(self, title, description, checkbox_column, checkbox_row):
+    def create_left_layout(self, mode, is_init=False):
         """Create the left layout with labels and a checkbox."""
         left_layout = QVBoxLayout()
 
-        upper_container = self.create_container(self.create_upper_layout(title, description), color="#E0FFFF")
-        lower_container = self.create_container(self.create_lower_layout(checkbox_column, checkbox_row), color="#FFFFE0")
-
-        left_layout.addWidget(upper_container, 4)  # 4 parts of space
-        left_layout.addWidget(lower_container, 6)
-
+        upper_container = self.create_container(self.create_upper_layout(self.config[mode]['title'], self.config[mode]['description']), color="#E0FFFF")
+        left_layout.addWidget(upper_container, 4)  # 4 parts of space  
         self.upper_container = upper_container
-        self.lower_container = lower_container
+        
+        if not is_init:
+            lower_container = self.create_container(self.create_lower_layout(mode), color="#FFFFE0")
+            left_layout.addWidget(lower_container, 6)
+            self.lower_container = lower_container
 
         return left_layout
 
@@ -81,8 +87,11 @@ class ExampleGUI(QWidget):
 
         return upper_layout
 
-    def create_lower_layout(self, checkbox_column, checkbox_row):
+    def create_lower_layout(self, mode):
         lower_layout = QHBoxLayout()
+
+        checkbox_row = int(self.config[mode]['checkbox_row'])
+        checkbox_column = int(self.config[mode]['checkbox_column'])
 
         # Create layouts using a dictionary for dynamic assignment
         checkbox_layouts = {i: QVBoxLayout() for i in range(1, checkbox_column + 1)}
@@ -90,7 +99,7 @@ class ExampleGUI(QWidget):
 
         for i in range(1, checkbox_row + 1):
             for j in range(1, checkbox_column + 1):
-                checkbox = QCheckBox(f'Option {i + (j-1)* checkbox_row}')
+                checkbox = QCheckBox(self.config[mode][f'option{i + (j-1)* checkbox_row}'])
                 self.checkbox_options.append(checkbox)
                 layout = QHBoxLayout()
                 layout.addWidget(checkbox)
@@ -101,6 +110,7 @@ class ExampleGUI(QWidget):
             if i == 2:
                 Verbutton = QPushButton('Verify')
                 self.VerButton = Verbutton
+                Verbutton.clicked.connect(partial(self.verify))
                 Verbutton.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
                 layout.addWidget(Verbutton)
             button_layout.addWidget(self.create_container(layout, color="#FFD700" if i == 2 else "#A4C639"), 1)
@@ -115,9 +125,10 @@ class ExampleGUI(QWidget):
     def create_right_layout(self):
         right_layout = QVBoxLayout()
         # Adding spacer widgets and button containers dynamically
-        for i in range(self.num_buttons * 2 + 1):
+        for i in range(len(self.config['Buttons']) * 2 + 1):
             if i % 2 == 1:
-                button_layout = self.create_button_layout(f'Button {i//2 + 1}')
+                button_text = self.config['Buttons'][f'button{(i // 2) + 1}']
+                button_layout = self.create_button_layout(button_text)
                 button_container = self.create_container(button_layout, color="lightblue")
                 right_layout.addWidget(button_container, 2)
             else:
@@ -140,17 +151,17 @@ class ExampleGUI(QWidget):
 
     def button_clicked(self, button_text):
         self.checkbox_options = []
-        if button_text == "Button 1":
-            self.update_left_layout(button_text, f'This is {button_text}', 2, 1)
-        if button_text == "Button 2":
-            self.update_left_layout(button_text, f'This is {button_text}', 2, 2)
-        if button_text == "Button 3":
-            self.update_left_layout(button_text, f'This is {button_text}', 2, 3)
+        if button_text == self.config['Buttons']['button1']:
+            self.update_left_layout('Recorder')
+        if button_text == self.config['Buttons']['button2']:
+            self.update_left_layout('Run_system')
+        if button_text == self.config['Buttons']['button3']:
+            self.update_left_layout('View')
         self.adjust_font_size()
 
-    def update_left_layout(self, title, description, checkbox_column, checkbox_row):
+    def update_left_layout(self, mode):
         # 创建新的左侧容器
-        new_left_container = self.create_container(self.create_left_layout(title, description, checkbox_column, checkbox_row), color="#FFA07A")
+        new_left_container = self.create_container(self.create_left_layout(mode), color="#FFA07A")
         
         # 替换旧的左侧容器，保持布局比例
         index = self.main_layout.indexOf(self.left_container)
@@ -183,7 +194,7 @@ class ExampleGUI(QWidget):
         base_font_size = max(8, min(self.width(), self.height()) // 100)
         return {
             "title": QFont("Arial", int(base_font_size * 4)),
-            "description": QFont("Arial", int(base_font_size * 1.0)),
+            "description": QFont("Arial", int(base_font_size * (2 if not self.VerButton else 1.5))),
             "buttons": QFont("Arial", int(base_font_size * 3.0)),
             "VerButton": QFont("Arial", int(base_font_size * 2.5)),
             "checkboxes": QFont("Arial", int(base_font_size * 1.8))
@@ -193,11 +204,13 @@ class ExampleGUI(QWidget):
         fonts = self.configure_fonts()
         self.apply_font(self.label_title, fonts["title"])
         self.apply_font(self.label_description, fonts["description"])
-        self.apply_font(self.VerButton, fonts["VerButton"])
         for button in self.buttons:
-            self.apply_font(button, fonts["buttons"])
-        for checkbox in self.checkbox_options:
-            self.apply_font(checkbox, fonts["checkboxes"])
+                self.apply_font(button, fonts["buttons"])
+        if self.VerButton:
+            self.apply_font(self.VerButton, fonts["VerButton"])
+            
+            for checkbox in self.checkbox_options:
+                self.apply_font(checkbox, fonts["checkboxes"])
 
 
     def apply_font(self, widget, font):
@@ -208,6 +221,6 @@ class ExampleGUI(QWidget):
 
 if __name__ == "__main__":
     app = QApplication([])
-    ex = ExampleGUI()
+    ex = Qt_gui()
     ex.show()
     app.exec_()
