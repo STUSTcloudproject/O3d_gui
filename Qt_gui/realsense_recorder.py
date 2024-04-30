@@ -21,7 +21,7 @@ from enum import IntEnum
 
 import sys
 sys.path.append(abspath(__file__))
-from Qt_gui.realsense_helper import get_profiles
+from    realsense_helper import get_profiles
 
 try:
     # Python 2 compatible
