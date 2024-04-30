@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QCheckBox, QApplication, QSizePolicy
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QCheckBox, QApplication, QSizePolicy, QMessageBox, QDialog, QFileDialog
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
 from functools import partial
@@ -18,6 +18,7 @@ class Qt_gui(QWidget):
         self.main_layout = None
         self.left_container = None
         self.right_container = None
+        self.output_path = None
         self.initUI()
 
     def verify(self):
@@ -26,8 +27,95 @@ class Qt_gui(QWidget):
             # 處理 label_title 和 self.checkbox_options 是否合法並分配字串給字典
             # 如果合法調用 callback 函數
             # 如果不合法彈出顯示框
-            
-            self.callback()  # 调用回调函数
+
+            dict_checkbox = {checkbox.text(): checkbox.isChecked() for checkbox in self.checkbox_options}
+            dict_checkbox = {self.label_title.text() : dict_checkbox}
+
+            #print(dict_checkbox)   
+            error = self.validate_params(dict_checkbox)
+            if error != 'pass':
+                self.show_error_dialog(error)
+            else:
+                output_path = self.show_confirmation_dialog(dict_checkbox)
+                if output_path:
+                    self.callback(dict_checkbox, output_path)  # 在此處調用callback，只有在用戶確認後
+
+    def show_confirmation_dialog(self, options):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Confirm Selection")
+        layout = QVBoxLayout()
+
+        label = QLabel("You have selected the following options:")
+        layout.addWidget(label)
+
+        for title, checkbox_dict in options.items():
+            for option, is_checked in checkbox_dict.items():
+                if is_checked:
+                    option_label = QLabel(f"{title}: {option}")
+                    layout.addWidget(option_label)
+
+        path_selector = QPushButton("Choose output folder")
+        if self.output_path:
+            self.folder_label.setText(f"Selected folder: {self.output_path}")
+        else:
+            self.folder_label = QLabel("No folder selected")
+        path_selector.clicked.connect(self.choose_output_folder)
+        layout.addWidget(path_selector)
+        layout.addWidget(self.folder_label)
+
+        confirm_button = QPushButton("Confirm")
+        confirm_button.clicked.connect(lambda: self.on_confirm(dialog))
+        layout.addWidget(confirm_button)
+
+        dialog.setLayout(layout)
+        result = dialog.exec_()
+
+        if result == QDialog.Accepted:
+            return self.output_path
+        else:
+            return None
+
+    def on_confirm(self, dialog):
+        if not self.output_path:
+            QMessageBox.warning(self, "Selection Required", "Please select an output folder before confirming.")
+        else:
+            dialog.accept()
+
+    def choose_output_folder(self):
+        folder_path = QFileDialog.getExistingDirectory(self, "Select Folder")
+        if folder_path:  # 確保用戶選擇了一個路徑
+            self.output_path = folder_path  # 儲存用戶選擇的路徑
+            self.folder_label.setText(f"Selected folder: {folder_path}")  # 更新標籤以顯示路徑
+        else:
+            self.folder_label.setText("No folder selected")  # 如果沒有選擇，顯示未選擇
+
+    def validate_params(self, dict):
+        keys = list(dict.keys())  # 将字典键转换为列表
+        option_dict = dict[keys[0]]
+        if keys[0] == 'Recorder':
+            true_count = sum(value for value in option_dict.values() if value)
+            if true_count != 1:
+                return f'error{true_count}'
+        if keys[0] == 'Run_system':
+            true_count = sum(value for value in option_dict.values() if value)
+            if true_count == 0:
+                return f'error{true_count}'
+        if keys[0] == 'View':
+            pass
+        return 'pass'
+
+    def show_error_dialog(self, error):
+        message = ''
+        if error == 'error0':
+            message = 'No item is selected.'
+        else:
+            message = 'More than one item is selected.'
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Warning)
+        msg.setWindowTitle("Validation Error")
+        msg.setText(message)
+        msg.setStandardButtons(QMessageBox.Ok)
+        msg.exec_()  # 显示为模态对话框
 
     def initUI(self):
         # Main layout
