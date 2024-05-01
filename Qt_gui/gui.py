@@ -49,6 +49,11 @@ class Qt_gui(QWidget):
                             self.callback(mode = 'run_script', options_dict=dict_options, path=output_path, width=width, height=height, fps=fps)  # 在此處調用callback，只有在用戶確認後
                         else:
                             self.callback(mode = 'run_script', options_dict=dict_options, path=output_path)
+                elif self.label_title.text() == 'Run_system':
+                    pass
+                elif self.label_title.text() == 'View':
+                    print('View')
+                    self.callback(mode = 'run_script', options_dict=dict_options)
 
     def show_confirmation_dialog(self, options, mode, need_realSense):
         dialog = ConfirmationDialog(self, options, mode, need_realSense, callback=self.callback)
