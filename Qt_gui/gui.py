@@ -5,6 +5,7 @@ from functools import partial
 import configparser
 from ConfirmationDialog import ConfirmationDialog
 from ErrorDialog import ErrorDialog
+import tool
 
 class Qt_gui(QWidget):
     def __init__(self, callback=None):
@@ -39,15 +40,24 @@ class Qt_gui(QWidget):
             else:
                 if self.label_title.text() == 'Recorder':
                     need_realSense = not dict_checkbox[self.config['Recorder']['option3']]
-                    output_path = self.show_confirmation_dialog(dict_options, self.label_title.text(), need_realSense)
-                    if output_path:
-                        self.callback(mode = 'run_script', options_dict = dict_options, path = output_path)  # 在此處調用callback，只有在用戶確認後
+                    result = self.show_confirmation_dialog(dict_options, self.label_title.text(), need_realSense)
+                    if result:
+                        output_path = result['output_path']
+                        selected_resolution = result['selected_resolution']
+                        if need_realSense:
+                            width, height, fps = tool.parse_resolution(selected_resolution)
+                            self.callback(mode = 'run_script', options_dict=dict_options, path=output_path, width=width, height=height, fps=fps)  # 在此處調用callback，只有在用戶確認後
+                        else:
+                            self.callback(mode = 'run_script', options_dict=dict_options, path=output_path)
 
     def show_confirmation_dialog(self, options, mode, need_realSense):
-        dialog = ConfirmationDialog(self, options, self.output_path, mode, need_realSense, callback=self.callback)
+        dialog = ConfirmationDialog(self, options, mode, need_realSense, callback=self.callback)
         result = dialog.exec_()
         if result == QDialog.Accepted:
-            return dialog.output_path
+            return {
+            'output_path': dialog.output_path,
+            'selected_resolution': dialog.selected_resolution  # 确保在确认对话框中设置了此属性
+            }
         else:
             return None
 

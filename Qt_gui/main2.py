@@ -7,15 +7,15 @@ from gui import Qt_gui
 from subprocess_run import PythonScriptExecutor
 from realsense_helper import get_profiles
 
-def my_callback_function(mode, options_dict=None, path=None):
+def my_callback_function(mode, options_dict=None, path=None , width=640, height=480, fps=30):
     print(f'Callback function has been called!')
     if mode == 'run_script':
         script_name, args = get_command_line(options_dict)
         if script_name:
-            args += ['--output_folder', path]
+            args += ['--output_folder', path, '--width', str(width), '--height', str(height), '--fps', str(fps)]
             stdout, stderr = run_script(script_name, args)
-            print("STDOUT:", stdout)
-            print("STDERR:", stderr)
+            #print("STDOUT:", stdout)
+            #print("STDERR:", stderr)
         else:
             print("Error: No valid script or arguments found.")
     elif mode == 'realsense_helper' :
@@ -24,8 +24,8 @@ def my_callback_function(mode, options_dict=None, path=None):
         except Exception as e:
             print(f"An error occurred: {e}")
             return None, None
-        print(f'Color profiles: {color_profiles}')
-        print(f'Depth profiles: {depth_profiles}')
+        #print(f'Color profiles: {color_profiles}')
+        #print(f'Depth profiles: {depth_profiles}')
         return color_profiles, depth_profiles
 
 def get_command_line(options_dict):
@@ -36,9 +36,9 @@ def get_command_line(options_dict):
     return None, []
 
 def run_script(script_name, args):
-    type_input = 'y\n'
+    print(f'Run {script_name} {args}')
     executor = PythonScriptExecutor()  # 确保executor在这个作用域中有效
-    stdout, stderr = executor.run_script(script_name, args, type_input)
+    stdout, stderr = executor.run_script(script_name, args)
     return stdout, stderr
 
 if __name__ == "__main__":

@@ -96,8 +96,7 @@ if __name__ == "__main__":
                         help="Set the frames per second of the video stream")
     args = parser.parse_args()
 
-    action_count = sum([args.record_rosbag, args.record_imgs, args.playback_rosbag])
-    if action_count != 1:
+    if sum(o is not False for o in vars(args).values()) != 2:
         parser.print_help()
         exit()
 
