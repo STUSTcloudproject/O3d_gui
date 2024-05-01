@@ -9,8 +9,8 @@ class PythonScriptExecutor:
         interpreter (str): 用於執行 Python 腳本的解釋器。
         """
         self.interpreter = interpreter
-
-    def run_script(self, script_path, args=[]):
+    
+    def run_script(self, script_path, args=[], type_input=None):
         """
         執行指定的 Python 腳本與參數，並捕獲其輸出與錯誤。
         
@@ -26,7 +26,7 @@ class PythonScriptExecutor:
             command = [self.interpreter, script_path] + args
             # 執行命令並捕獲輸出
             print(f'Run {command}')
-            result = subprocess.run(command, capture_output=True, input='y\n', text=True, check=True)
+            result = subprocess.run(command, capture_output=True, input=type_input, text=True, check=True)
             return result.stdout, result.stderr
         except subprocess.CalledProcessError as e:
             return e.stdout, e.stderr

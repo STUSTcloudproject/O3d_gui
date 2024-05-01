@@ -29,21 +29,22 @@ class Qt_gui(QWidget):
             # 處理 label_title 和 self.checkbox_options 是否合法並分配字串給字典
             # 如果合法調用 callback 函數
             # 如果不合法彈出顯示框
-
             dict_checkbox = {checkbox.text(): checkbox.isChecked() for checkbox in self.checkbox_options}
-            dict_checkbox = {self.label_title.text() : dict_checkbox}
+            dict_options = {self.label_title.text() : dict_checkbox}
 
-            #print(dict_checkbox)   
-            error = self.validate_params(dict_checkbox)
+            #print(dict_options)   
+            error = self.validate_params(dict_options)
             if error != 'pass':
                 self.show_error(error)
             else:
-                output_path = self.show_confirmation_dialog(dict_checkbox)
-                if output_path:
-                    self.callback(dict_checkbox, output_path)  # 在此處調用callback，只有在用戶確認後
+                if self.label_title.text() == 'Recorder':
+                    need_realSense = not dict_checkbox[self.config['Recorder']['option3']]
+                    output_path = self.show_confirmation_dialog(dict_options, self.label_title.text(), need_realSense)
+                    if output_path:
+                        self.callback(mode = 'run_script', options_dict = dict_options, path = output_path)  # 在此處調用callback，只有在用戶確認後
 
-    def show_confirmation_dialog(self, options):
-        dialog = ConfirmationDialog(self, options, self.output_path)
+    def show_confirmation_dialog(self, options, mode, need_realSense):
+        dialog = ConfirmationDialog(self, options, self.output_path, mode, need_realSense, callback=self.callback)
         result = dialog.exec_()
         if result == QDialog.Accepted:
             return dialog.output_path

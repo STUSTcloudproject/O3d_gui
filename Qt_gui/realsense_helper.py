@@ -42,3 +42,6 @@ def get_profiles():
                         depth_profiles.append((w, h, fps, fmt))
 
     return color_profiles, depth_profiles
+
+if __name__ == "__main__":
+    print(get_profiles())
