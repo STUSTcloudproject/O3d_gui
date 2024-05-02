@@ -8,10 +8,9 @@ from ErrorDialog import ErrorDialog
 import tool
 
 class Qt_gui(QWidget):
-    def __init__(self, callback=None):
+    def __init__(self, config=None, callback=None):
         super().__init__()
-        self.config = configparser.ConfigParser()
-        self.config.read('config.ini') 
+        self.config = config
         self.callback = callback
         self.buttons = []
         self.checkbox_options = []
@@ -38,7 +37,7 @@ class Qt_gui(QWidget):
             if error != 'pass':
                 self.show_error(error)
             else:
-                if self.label_title.text() == 'Recorder Mode':
+                if self.label_title.text() == self.config['Mode']['mode1']:
                     need_realSense = not dict_checkbox[self.config['Recorder']['option3']]
                     result = self.show_confirmation_dialog(dict_options, self.label_title.text(), need_realSense)
                     if result:
@@ -49,9 +48,9 @@ class Qt_gui(QWidget):
                             self.callback(mode = 'run_script', options_dict=dict_options, path=output_path, width=width, height=height, fps=fps)  # 在此處調用callback，只有在用戶確認後
                         else:
                             self.callback(mode = 'run_script', options_dict=dict_options, path=output_path)
-                elif self.label_title.text() == 'System Operations':
+                elif self.label_title.text() == self.config['Mode']['mode2']:
                     pass
-                elif self.label_title.text() == 'Visualization Mode':
+                elif self.label_title.text() == self.config['Mode']['mode3']:
                     self.callback(mode = 'run_script', options_dict=dict_options)
 
     def show_confirmation_dialog(self, options, mode, need_realSense):
@@ -68,15 +67,15 @@ class Qt_gui(QWidget):
     def validate_params(self, dict):
         keys = list(dict.keys())  # 将字典键转换为列表
         option_dict = dict[keys[0]]
-        if keys[0] == 'Recorder':
+        if keys[0] == self.config['Mode']['mode1']:
             true_count = sum(value for value in option_dict.values() if value)
             if true_count != 1:
                 return f'error{true_count}'
-        if keys[0] == 'Run_system':
+        if keys[0] == self.config['Mode']['mode2']:
             true_count = sum(value for value in option_dict.values() if value)
             if true_count == 0:
                 return f'error{true_count}'
-        if keys[0] == 'View':
+        if keys[0] == self.config['Mode']['mode3']:
             pass
         return 'pass'
 
@@ -205,12 +204,10 @@ class Qt_gui(QWidget):
 
     def button_clicked(self, button_text):
         self.checkbox_options = []
-        if button_text == self.config['Buttons']['button1']:
-            self.update_left_layout('Recorder')
-        if button_text == self.config['Buttons']['button2']:
-            self.update_left_layout('Run_system')
-        if button_text == self.config['Buttons']['button3']:
-            self.update_left_layout('View')
+        # Get a list of button texts from the configuration that should trigger an update
+        valid_buttons = set(self.config['Buttons'].values())
+        if button_text in valid_buttons:
+            self.update_left_layout(button_text)
         self.adjust_font_size()
 
     def update_left_layout(self, mode):
@@ -274,7 +271,9 @@ class Qt_gui(QWidget):
             print("Warning: Attempted to set font on a widget that has not been created.")
 
 if __name__ == "__main__":
+    config = configparser.ConfigParser()
+    config.read('config.ini') 
     app = QApplication([])
-    ex = Qt_gui()
+    ex = Qt_gui(config=config, callback=None)
     ex.show()
     app.exec_()

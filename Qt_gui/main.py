@@ -35,11 +35,13 @@ def my_callback_function(mode, options_dict=None, path=None , width=640, height=
 
 def get_command_line(options_dict):
     print(f'Options dict: {options_dict}')
-    if 'Recorder Mode' in options_dict:
+    if config['Mode']['mode1'] in options_dict:
         # 生成由命令行标志组成的列表
         args = [f'--{key}' for key, value in options_dict['Recorder Mode'].items() if value]
         return 'realsense_recorder.py', args
-    elif 'Visualization Mode' in options_dict:
+    elif config['Mode']['mode2'] in options_dict:
+        return None, []
+    elif config['Mode']['mode3'] in options_dict:
         return 'vis_gui.py', []
     return None, []
 
@@ -51,10 +53,12 @@ def run_script(script_name, args):
 
 if __name__ == "__main__":
     try:
+        config = configparser.ConfigParser()
+        config.read('config.ini') 
         pythoncom.CoInitializeEx(pythoncom.COINIT_APARTMENTTHREADED)
         app = QApplication([])
         executor = PythonScriptExecutor()
-        ex = Qt_gui(callback=my_callback_function)
+        ex = Qt_gui(config=config, callback=my_callback_function)
         ex.show()
         app.exec_()
     finally:
