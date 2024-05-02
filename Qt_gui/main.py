@@ -15,6 +15,8 @@ def my_callback_function(mode, options_dict=None, path=None , width=640, height=
             args += ['--output_folder', path, '--width', str(width), '--height', str(height), '--fps', str(fps)]
             stdout, stderr = run_script(script_name, args)
             #print("STDOUT:", stdout)
+            if stderr:
+                ex.show_error('error_callback', stderr)
             #print("STDERR:", stderr)
         elif script_name == 'vis_gui.py':
             print("Run vis_gui.py")
@@ -33,11 +35,11 @@ def my_callback_function(mode, options_dict=None, path=None , width=640, height=
 
 def get_command_line(options_dict):
     print(f'Options dict: {options_dict}')
-    if 'Recorder' in options_dict:
+    if 'Recorder Mode' in options_dict:
         # 生成由命令行标志组成的列表
-        args = [f'--{key}' for key, value in options_dict['Recorder'].items() if value]
+        args = [f'--{key}' for key, value in options_dict['Recorder Mode'].items() if value]
         return 'realsense_recorder.py', args
-    elif 'View' in options_dict:
+    elif 'Visualization Mode' in options_dict:
         return 'vis_gui.py', []
     return None, []
 

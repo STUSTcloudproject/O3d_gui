@@ -38,7 +38,7 @@ class Qt_gui(QWidget):
             if error != 'pass':
                 self.show_error(error)
             else:
-                if self.label_title.text() == 'Recorder':
+                if self.label_title.text() == 'Recorder Mode':
                     need_realSense = not dict_checkbox[self.config['Recorder']['option3']]
                     result = self.show_confirmation_dialog(dict_options, self.label_title.text(), need_realSense)
                     if result:
@@ -49,10 +49,9 @@ class Qt_gui(QWidget):
                             self.callback(mode = 'run_script', options_dict=dict_options, path=output_path, width=width, height=height, fps=fps)  # 在此處調用callback，只有在用戶確認後
                         else:
                             self.callback(mode = 'run_script', options_dict=dict_options, path=output_path)
-                elif self.label_title.text() == 'Run_system':
+                elif self.label_title.text() == 'System Operations':
                     pass
-                elif self.label_title.text() == 'View':
-                    print('View')
+                elif self.label_title.text() == 'Visualization Mode':
                     self.callback(mode = 'run_script', options_dict=dict_options)
 
     def show_confirmation_dialog(self, options, mode, need_realSense):
@@ -81,8 +80,8 @@ class Qt_gui(QWidget):
             pass
         return 'pass'
 
-    def show_error(self, error):
-        ErrorDialog(self, error)
+    def show_error(self, error, text=''):
+        ErrorDialog(self, error, text)
 
     def initUI(self):
         # Main layout
