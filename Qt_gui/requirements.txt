@@ -1,15 +1,7 @@
 PyQt5
 pywin32
-pythoncom
 configparser
 pyrealsense2
 numpy
 opencv-python
-argparse
-shutil
-json
-subprocess
-glob
 open3d
-platform
-sys
